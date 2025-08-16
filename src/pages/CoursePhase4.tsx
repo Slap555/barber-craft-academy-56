@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Circle, Clock, Trophy, ArrowLeft, ArrowRight } from "lucide-react";
+import { Trophy, ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { LessonCard } from "@/components/video/LessonCard";
+import { useLessonProgress } from "@/hooks/useLessonProgress";
 
 const lessons = [
   {
@@ -107,8 +109,19 @@ const lessons = [
 ];
 
 const CoursePhase4 = () => {
-  const completedLessons = lessons.filter(lesson => lesson.completed).length;
+  const { lessonProgresses, completeLessson, getTotalXP, getCompletedLessons } = useLessonProgress();
+  
+  const lessonsWithProgress = lessons.map(lesson => ({
+    ...lesson,
+    completed: lessonProgresses[lesson.id]?.isCompleted || false
+  }));
+
+  const completedLessons = getCompletedLessons();
   const progressPercentage = (completedLessons / lessons.length) * 100;
+
+  const handleLessonComplete = (lessonId: number) => {
+    completeLessson(lessonId);
+  };
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -155,50 +168,12 @@ const CoursePhase4 = () => {
 
         {/* Lessons Grid */}
         <div className="grid gap-6 mb-8">
-          {lessons.map((lesson, index) => (
-            <Card 
-              key={lesson.id} 
-              className={`transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${
-                lesson.completed ? 'bg-primary/5 border-primary/30' : ''
-              }`}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      {lesson.completed ? (
-                        <CheckCircle className="w-5 h-5 text-primary" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="text-xs">
-                          Lección {lesson.id}
-                        </Badge>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          <span className="text-xs">{lesson.duration}</span>
-                        </div>
-                      </div>
-                      <CardTitle className="text-lg mb-2">
-                        {lesson.title}
-                      </CardTitle>
-                      <CardDescription className="text-primary font-medium">
-                        📝 Tarea: {lesson.task}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Button 
-                    variant={lesson.completed ? "secondary" : "default"}
-                    size="sm"
-                  >
-                    {lesson.completed ? "Completada" : "Comenzar"}
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
+          {lessonsWithProgress.map((lesson) => (
+            <LessonCard
+              key={lesson.id}
+              lesson={lesson}
+              onLessonComplete={handleLessonComplete}
+            />
           ))}
         </div>
 
